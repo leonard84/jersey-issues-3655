@@ -41,10 +41,15 @@ public abstract class JerseyClientProxyApplicationTests {
 
     public Client client;
 
+    private ClientConfig config;
+
     @Before
     public void setup() {
-        ClientConfig config = configureClient(new ClientConfig());
+        config = configureClient(new ClientConfig());
         config.property(ClientProperties.PROXY_URI, "http://localhost:"+PROXY_PORT);
+    }
+
+    private void getClient(ClientConfig config) {
         client = ClientBuilder.newClient(config);
     }
 
@@ -55,8 +60,21 @@ public abstract class JerseyClientProxyApplicationTests {
 
     public abstract ClientConfig configureClient(ClientConfig config);
 
-    @Test
+    @Test(timeout = 10000)
     public void SimpleProxy() {
+        getClient(config);
+        performRequest();
+    }
+
+    @Test(timeout = 10000)
+    public void SimpleProxyWithAuth() {
+        config.property(ClientProperties.PROXY_USERNAME, "user");
+        config.property(ClientProperties.PROXY_PASSWORD, "pass");
+        getClient(config);
+        performRequest();
+    }
+
+    private void performRequest() {
         HttpRequest request = HttpRequest.request().withMethod("GET")
                 .withHeaders(new Header("Accept", MediaType.APPLICATION_JSON));
         HttpResponse response = HttpResponse.response()

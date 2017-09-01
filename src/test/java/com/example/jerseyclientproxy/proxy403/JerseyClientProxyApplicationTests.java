@@ -32,10 +32,15 @@ public abstract class JerseyClientProxyApplicationTests {
 
     public Client client;
 
+    private ClientConfig config;
+
     @Before
     public void setup() {
-        ClientConfig config = configureClient(new ClientConfig());
+        config = configureClient(new ClientConfig());
         config.property(ClientProperties.PROXY_URI, "http://localhost:"+SERVER_PORT);
+    }
+
+    private void getClient(ClientConfig config) {
         client = ClientBuilder.newClient(config);
     }
 
@@ -46,13 +51,31 @@ public abstract class JerseyClientProxyApplicationTests {
 
     public abstract ClientConfig configureClient(ClientConfig config);
 
-    @Test(timeout = 30000)
+    @Test(timeout = 10000)
     public void ProxyRespondsWithForbiddenHttps() {
+        getClient(config);
         ProxyRespondsWithForbidden("https://localhost:" + 1337);
     }
 
-    @Test(timeout = 30000)
+    @Test(timeout = 10000)
     public void ProxyRespondsWithForbiddenHttp() {
+        getClient(config);
+        ProxyRespondsWithForbidden("http://localhost:" + 1337);
+    }
+
+    @Test(timeout = 10000)
+    public void ProxyRespondsWithForbiddenHttpsAndAuth() {
+        getClient(config);
+        config.property(ClientProperties.PROXY_USERNAME, "user");
+        config.property(ClientProperties.PROXY_PASSWORD, "pass");
+        ProxyRespondsWithForbidden("https://localhost:" + 1337);
+    }
+
+    @Test(timeout = 10000)
+    public void ProxyRespondsWithForbiddenHttpAndAuth() {
+        getClient(config);
+        config.property(ClientProperties.PROXY_USERNAME, "user");
+        config.property(ClientProperties.PROXY_PASSWORD, "pass");
         ProxyRespondsWithForbidden("http://localhost:" + 1337);
     }
 
