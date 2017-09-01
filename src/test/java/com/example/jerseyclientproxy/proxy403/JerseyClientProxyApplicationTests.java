@@ -54,45 +54,50 @@ public abstract class JerseyClientProxyApplicationTests {
     @Test(timeout = 10000)
     public void ProxyRespondsWithForbiddenHttps() {
         getClient(config);
-        ProxyRespondsWithForbidden("https://localhost:" + 1337);
+        ProxyRespondsWithForbidden("https://localhost:" + 1337, constructHttpsRequest());
     }
 
     @Test(timeout = 10000)
     public void ProxyRespondsWithForbiddenHttp() {
         getClient(config);
-        ProxyRespondsWithForbidden("http://localhost:" + 1337);
+        ProxyRespondsWithForbidden("http://localhost:" + 1337, constructHttpRequest());
     }
 
     @Test(timeout = 10000)
     public void ProxyRespondsWithForbiddenHttpsAndAuth() {
-        getClient(config);
         config.property(ClientProperties.PROXY_USERNAME, "user");
         config.property(ClientProperties.PROXY_PASSWORD, "pass");
-        ProxyRespondsWithForbidden("https://localhost:" + 1337);
+        getClient(config);
+        ProxyRespondsWithForbidden("https://localhost:" + 1337, constructHttpsRequest());
     }
 
     @Test(timeout = 10000)
     public void ProxyRespondsWithForbiddenHttpAndAuth() {
-        getClient(config);
         config.property(ClientProperties.PROXY_USERNAME, "user");
         config.property(ClientProperties.PROXY_PASSWORD, "pass");
-        ProxyRespondsWithForbidden("http://localhost:" + 1337);
+        getClient(config);
+        ProxyRespondsWithForbidden("http://localhost:" + 1337, constructHttpRequest());
     }
 
-    public void ProxyRespondsWithForbidden(String target) {
-        HttpRequest getRequest = HttpRequest.request().withMethod("GET");
-        HttpRequest connectRequest = HttpRequest.request().withMethod("CONNECT");
+    public void ProxyRespondsWithForbidden(String target, HttpRequest request) {
         HttpResponse response = HttpResponse.response()
                 .withHeaders(new Header("Content-Type", "application/json"))
                 .withBody("{\"error\":\"Forbidden\"}")
                 .withStatusCode(403);
 
-        mockServerClient.when(getRequest).respond(response);
-        mockServerClient.when(connectRequest).respond(response);
+        mockServerClient.when(request).respond(response);
 
         try (Response response1 = client.target(target).request(MediaType.APPLICATION_JSON_TYPE).get()) {
             assertThat(response1.getStatus(), is(403));
         }
+    }
+
+    protected HttpRequest constructHttpsRequest() {
+        return HttpRequest.request().withMethod("CONNECT");
+    }
+
+    protected HttpRequest constructHttpRequest() {
+        return HttpRequest.request().withMethod("GET");
     }
 
 }
